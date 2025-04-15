@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Invia la tua Posizione</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 80%;
+      max-width: 300px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+
+    #status {
+      font-size: 1.1em;
+      margin: 10px 0;
+    }
+
+    #map {
+      height: 300px;
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .loader {
+      border: 6px solid #eee;
+      border-top: 6px solid #4CAF50;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📍 Condivisione posizione</h2>
+
+  <input type="tel" id="phone" placeholder="Inserisci il numero di telefono">
+  <button onclick="startInvio()">Invia posizione</button>
+
+  <div class="loader" style="display:none;"></div>
+  <div id="status"></div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let map, marker;
+
+    function startInvio() {
+      const phone = document.getElementById("phone").value.trim();
+      if (!phone) {
+        document.getElementById("status").innerText = "⚠️ Inserisci il numero di telefono.";
+        return;
+      }
+
+      document.querySelector(".loader").style.display = "block";
+      document.getElementById("status").innerText = "Rilevamento posizione...";
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+
+        let addressParts = {};
+        let fullAddress = "";
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          const data = await res.json();
+          fullAddress = data.display_name || "";
+          addressParts = data.address || {};
+        } catch (err) {
+          console.error("Reverse geocoding fallito:", err);
+        }
+
+        // 🔁 Sostituisci il link qui sotto con il tuo URL Apps Script
+        fetch("https://script.google.com/macros/s/AKfycbxtdF1DBCn1rtPmSZNYDN6I03-cMZNTFq-cTxcbsYpGBXWoBSRFD5LDv_hT7cOE2Ykh/exec", {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lon,
+            accuracy: accuracy,
+            phone: phone,
+            road: addressParts.road || "",
+            house_number: addressParts.house_number || "",
+            city: addressParts.city || addressParts.town || addressParts.village || "",
+            county: addressParts.county || "",
+            postcode: addressParts.postcode || "",
+            country: addressParts.country || ""
+          })
+        });
+	// Dopo che ha inviato, fai partire la chiamata
+                window.location.href = "tel:+393494103680"; // <-- numero da chiamare
+
+        // UI feedback
+        document.querySelector(".loader").style.display = "none";
+        document.querySelector("button").style.display = "none";
+        document.getElementById("status").innerHTML = `
+          ✅ Posizione inviata!<br>
+          📞 ${phone}<br>
+          📍 ${fullAddress}<br>
+          🎯 Precisione: ±${Math.round(accuracy)} metri
+        `;
+
+        // Mappa
+        document.getElementById("map").style.display = "block";
+        if (!map) {
+          map = L.map('map').setView([lat, lon], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+          }).addTo(map);
+          marker = L.marker([lat, lon]).addTo(map)
+            .bindPopup(`${fullAddress}<br>±${Math.round(accuracy)} m`).openPopup();
+        } else {
+          map.setView([lat, lon], 16);
+          marker.setLatLng([lat, lon]).bindPopup(`${fullAddress}<br>±${Math.round(accuracy)} m`).openPopup();
+        }
+
+      }, () => {
+        document.querySelector(".loader").style.display = "none";
+        document.getElementById("status").innerText = "❌ Errore nel rilevamento della posizione.";
+      });
+    }
+  </script>
+</body>
+</html>
