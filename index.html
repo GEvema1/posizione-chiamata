@@ -66,10 +66,10 @@
 </head>
 <body>
 
-  <h2>📍 Condivisione posizione</h2>
+  <h2>📍 CONDIVISIONE POSIZIONE</h2>
 
-  <input type="tel" id="phone" placeholder="Inserisci il numero di telefono">
-  <button onclick="startInvio()">Invia posizione</button>
+  <input type="tel" id="phone" placeholder="INSERISCI IL NUMERO DI TELEFONO">
+  <button onclick="startInvio()">INVIA POSIZIONE</button>
 
   <div class="loader" style="display:none;"></div>
   <div id="status"></div>
@@ -79,43 +79,43 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     let map, marker;
-    const bingApiKey = "AthtkCPwql97THqzGCrD_j46OpsQMsFek9mI_AN_otc4nbImWoKk8szbt5Sw1wmm"; // 🔑 Inserisci qui la tua chiave Bing
+    const bingApiKey = "AthtkCPwql97THqzGCrD_j46OpsQMsFek9mI_AN_otc4nbImWoKk8szbt5Sw1wmm"; // 🔑 Sostituisci con la tua chiave Bing Maps
 
     function traduciLuogo(nome) {
       const dizionario = {
-        "Turin": "Torino",
-        "Rome": "Roma",
-        "Milan": "Milano",
-        "Naples": "Napoli",
-        "Florence": "Firenze",
-        "Genoa": "Genova",
-        "Venice": "Venezia"
+        "Turin": "TORINO",
+        "Rome": "ROMA",
+        "Milan": "MILANO",
+        "Naples": "NAPOLI",
+        "Florence": "FIRENZE",
+        "Genoa": "GENOVA",
+        "Venice": "VENEZIA"
       };
-      return dizionario[nome] || nome;
+      return dizionario[nome] ? dizionario[nome].toUpperCase() : nome.toUpperCase();
     }
 
     function traduciProvincia(nome) {
       const dizionario = {
-        "Turin": "TO",
-        "Rome": "RM",
-        "Milan": "MI",
-        "Naples": "NA",
-        "Florence": "FI",
-        "Genoa": "GE",
-        "Venice": "VE"
+        "Metropolitan City of Turin": "TO",
+        "Metropolitan City of Rome": "RM",
+        "Metropolitan City of Milan": "MI",
+        "Metropolitan City of Naples": "NA",
+        "Metropolitan City of Florence": "FI",
+        "Metropolitan City of Genoa": "GE",
+        "Metropolitan City of Venice": "VE"
       };
-      return dizionario[nome] || nome;
+      return dizionario[nome] ? dizionario[nome].toUpperCase() : nome.toUpperCase();
     }
 
     function startInvio() {
       const phone = document.getElementById("phone").value.trim();
       if (!phone) {
-        document.getElementById("status").innerText = "⚠️ Inserisci il numero di telefono.";
+        document.getElementById("status").innerText = "⚠️ INSERISCI IL NUMERO DI TELEFONO.";
         return;
       }
 
       document.querySelector(".loader").style.display = "block";
-      document.getElementById("status").innerText = "Rilevamento posizione...";
+      document.getElementById("status").innerText = "RILEVAMENTO POSIZIONE...";
 
       navigator.geolocation.getCurrentPosition(async (position) => {
         const lat = position.coords.latitude;
@@ -131,7 +131,7 @@
 
           if (data.resourceSets.length > 0 && data.resourceSets[0].resources.length > 0) {
             const location = data.resourceSets[0].resources[0].address;
-            fullAddress = data.resourceSets[0].resources[0].name || "";
+            fullAddress = (data.resourceSets[0].resources[0].name || "").toUpperCase();
 
             let road = location.addressLine || "";
             let house_number = "";
@@ -143,10 +143,10 @@
             }
 
             addressParts = {
-              road: road,
+              road: road.toUpperCase(),
               house_number: house_number.toUpperCase(),
-              city: traduciLuogo(location.locality || "").toUpperCase(),
-              county: traduciProvincia(location.adminDistrict2 || "").toUpperCase(),
+              city: traduciLuogo(location.locality || ""),
+              county: traduciProvincia(location.adminDistrict2 || ""),
               postcode: (location.postalCode || "").toUpperCase(),
               country: (location.countryRegion || "").toUpperCase()
             };
@@ -176,17 +176,17 @@
           })
         });
 
-        // Dopo che ha inviato, fai partire la chiamata
+        // Avvia la chiamata
         window.location.href = "tel:+393494103680";
 
-        // UI feedback
+        // UI Feedback
         document.querySelector(".loader").style.display = "none";
         document.querySelector("button").style.display = "none";
         document.getElementById("status").innerHTML = `
-          ✅ Posizione inviata!<br>
+          ✅ POSIZIONE INVIATA!<br>
           📞 ${phone}<br>
           📍 ${fullAddress}<br>
-          🎯 Precisione: ±${Math.round(accuracy)} metri
+          🎯 PRECISIONE: ±${Math.round(accuracy)} metri
         `;
 
         // Mappa
@@ -197,15 +197,15 @@
             attribution: '&copy; OpenStreetMap',
           }).addTo(map);
           marker = L.marker([lat, lon]).addTo(map)
-            .bindPopup(`${fullAddress}<br>±${Math.round(accuracy)} m`).openPopup();
+            .bindPopup(`${fullAddress}<br>±${Math.round(accuracy)} M`).openPopup();
         } else {
           map.setView([lat, lon], 16);
-          marker.setLatLng([lat, lon]).bindPopup(`${fullAddress}<br>±${Math.round(accuracy)} m`).openPopup();
+          marker.setLatLng([lat, lon]).bindPopup(`${fullAddress}<br>±${Math.round(accuracy)} M`).openPopup();
         }
 
       }, () => {
         document.querySelector(".loader").style.display = "none";
-        document.getElementById("status").innerText = "❌ Errore nel rilevamento della posizione.";
+        document.getElementById("status").innerText = "❌ ERRORE NEL RILEVAMENTO DELLA POSIZIONE.";
       });
     }
   </script>
