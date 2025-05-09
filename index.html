@@ -79,6 +79,33 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     let map, marker;
+    const bingApiKey = "AthtkCPwql97THqzGCrD_j46OpsQMsFek9mI_AN_otc4nbImWoKk8szbt5Sw1wmm"; // 🔑 Inserisci qui la tua chiave Bing
+
+    function traduciLuogo(nome) {
+      const dizionario = {
+        "Turin": "Torino",
+        "Rome": "Roma",
+        "Milan": "Milano",
+        "Naples": "Napoli",
+        "Florence": "Firenze",
+        "Genoa": "Genova",
+        "Venice": "Venezia"
+      };
+      return dizionario[nome] || nome;
+    }
+
+    function traduciProvincia(nome) {
+      const dizionario = {
+        "Turin": "TO",
+        "Rome": "RM",
+        "Milan": "MI",
+        "Naples": "NA",
+        "Florence": "FI",
+        "Genoa": "GE",
+        "Venice": "VE"
+      };
+      return dizionario[nome] || nome;
+    }
 
     function startInvio() {
       const phone = document.getElementById("phone").value.trim();
@@ -99,12 +126,33 @@
         let fullAddress = "";
 
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          const res = await fetch(`https://dev.virtualearth.net/REST/v1/Locations/${lat},${lon}?includeEntityTypes=Address&culture=it-IT&key=${bingApiKey}`);
           const data = await res.json();
-          fullAddress = data.display_name || "";
-          addressParts = data.address || {};
+
+          if (data.resourceSets.length > 0 && data.resourceSets[0].resources.length > 0) {
+            const location = data.resourceSets[0].resources[0].address;
+            fullAddress = data.resourceSets[0].resources[0].name || "";
+
+            let road = location.addressLine || "";
+            let house_number = "";
+
+            const match = road.match(/^(.+?)\s+(\d+\w*)$/);
+            if (match) {
+              road = match[1];
+              house_number = match[2];
+            }
+
+            addressParts = {
+              road: road,
+              house_number: house_number,
+              city: traduciLuogo(location.locality || ""),
+              county: traduciProvincia(location.adminDistrict2 || ""),
+              postcode: location.postalCode || "",
+              country: location.countryRegion || ""
+            };
+          }
         } catch (err) {
-          console.error("Reverse geocoding fallito:", err);
+          console.error("Reverse geocoding Bing fallito:", err);
         }
 
         // 🔁 Sostituisci il link qui sotto con il tuo URL Apps Script
@@ -119,16 +167,17 @@
             longitude: lon,
             accuracy: accuracy,
             phone: phone,
-            road: addressParts.road || "",
-            house_number: addressParts.house_number || "",
-            city: addressParts.city || addressParts.town || addressParts.village || "",
-            county: addressParts.county || "",
-            postcode: addressParts.postcode || "",
-            country: addressParts.country || ""
+            road: addressParts.road,
+            house_number: addressParts.house_number,
+            city: addressParts.city,
+            county: addressParts.county,
+            postcode: addressParts.postcode,
+            country: addressParts.country
           })
         });
-	// Dopo che ha inviato, fai partire la chiamata
-                window.location.href = "tel:+393494103680"; // <-- numero da chiamare
+
+        // Dopo che ha inviato, fai partire la chiamata
+        window.location.href = "tel:+393494103680";
 
         // UI feedback
         document.querySelector(".loader").style.display = "none";
