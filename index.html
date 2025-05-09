@@ -144,11 +144,11 @@
 
             addressParts = {
               road: road,
-              house_number: house_number,
-              city: traduciLuogo(location.locality || ""),
-              county: traduciProvincia(location.adminDistrict2 || ""),
-              postcode: location.postalCode || "",
-              country: location.countryRegion || ""
+              house_number: house_number.toUpperCase(),
+              city: traduciLuogo(location.locality || "").toUpperCase(),
+              county: traduciProvincia(location.adminDistrict2 || "").toUpperCase(),
+              postcode: (location.postalCode || "").toUpperCase(),
+              country: (location.countryRegion || "").toUpperCase()
             };
           }
         } catch (err) {
